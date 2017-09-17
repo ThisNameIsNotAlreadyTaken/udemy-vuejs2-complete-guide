@@ -5,16 +5,18 @@
             <strong>Success!</strong> Your information has been saved! <router-link :to="{ name: 'myinfo' }">My info page</router-link> is now available!
         </div>
         <form class="form-horizontal" @submit="onSubmit">
-            <app-form-input :$v="$v.info.firstName" @input="info.firstName = $event" :config="{ name: 'First name', value: info.firstName, 
-                errorText: 'First name field is required' }"></app-form-input>
-            <app-form-input :$v="$v.info.lastName" @input="info.lastName = $event" :config="{ name: 'Last name', value: info.lastName, 
-                errorText: 'Last name field is required' }"></app-form-input>
-            <app-form-input :$v="$v.info.email" @input="info.email = $event" :config="{ name: 'Email', value: info.email, 
-                errorText: 'Must be a valid email address: handle@domain format' }"></app-form-input>
-            <app-form-input :$v="$v.info.phone" @input="info.phone = $event" :config="{ name: 'Phone', value: info.phone, 
-                errorText: 'Phone must be in the format ###-###-####.', placeholder: 'Phone ###-###-####' }"></app-form-input>
-            <app-form-input :$v="$v.info.favoriteDishNumber" @input="info.favoriteDishNumber = $event" :config="{ name: 'Favorite dish number', value: info.favoriteDishNumber, 
-                errorText: 'No such menu number exists' }"></app-form-input>
+            <app-form-input :$v="$v.info.firstName" :name="'First name'" :value.sync="info.firstName" :errorText="'First name field is required'">
+            </app-form-input>
+            <app-form-input :$v="$v.info.lastName" :name="'Last name'" :value.sync="info.lastName" :errorText="'Last name field is required'">
+            </app-form-input>
+            <app-form-input :$v="$v.info.email" :name="'Email'" :value.sync="info.email" :errorText="'Must be a valid email address: handle@domain format'">
+            </app-form-input>
+            <app-form-input :$v="$v.info.phone" :name="'Phone'" :value.sync="info.phone" :errorText="'Phone must be in the format ###-###-####.'"
+                :placeholder="'Phone ###-###-####'">
+            </app-form-input>
+            <app-form-input :$v="$v.info.favoriteDishNumber" :name="'Favorite dish number'" :value.sync="info.favoriteDishNumber" 
+                :errorText="'No such menu number exists'">
+            </app-form-input>
             <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-10 col-md-1">
                     <button type="submit" :disabled="$v.$invalid" class="btn btn-default" :class="{'btn-success': !$v.$invalid, 'btn-danger': $v.$invalid}">Sign Up</button>
