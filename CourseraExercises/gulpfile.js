@@ -19,6 +19,17 @@ const watchify = require('watchify');
 const exec = require('child_process').exec;
 const babelify = require('babelify');
 const vueify = require('vueify');
+const envify = require('envify');
+const gulpif = require('gulp-if');
+
+/* helpers */
+gulp.task('set-dev-node-env', function() {
+    return process.env.NODE_ENV = 'development';
+});
+
+gulp.task('set-prod-node-env', function() {
+    return process.env.NODE_ENV = 'production';
+});
 
 /* clean tasks */
 
@@ -58,11 +69,17 @@ gulp.task("copy", function (callback) {
 
 /* browserify tasks */
 
-const browserifyOptions = {
-    cache: {},
-    packageCache: {},
-    entries: ['./src/main.js'],
-    debug: true,
+const getBrowserifyCommonObj = () => {
+    return browserify({
+        cache: {},
+        packageCache: {},
+        entries: ['./src/main.js'],
+        debug: process.env.NODE_ENV === 'production' ? false : true
+    })
+    .transform("envify", { NODE_ENV: process.env.NODE_ENV, global: true })
+    .transform("vueify")
+    .transform("babelify")
+    .transform(["require-globify"]);
 };
 
 function bundleJs(bundle) {
@@ -74,25 +91,18 @@ function bundleJs(bundle) {
         this.emit("end");
     }).pipe(source("bundle.js"))
         .pipe(buffer())
-        .pipe(sourcemaps.init({ loadMaps: true }))
-        .pipe(sourcemaps.write("./"))
+        .pipe(gulpif(process.env.NODE_ENV !== 'production', sourcemaps.init({ loadMaps: true })))
+        .pipe(gulpif(process.env.NODE_ENV !== 'production', sourcemaps.write("./")))
+        .pipe(gulpif(process.env.NODE_ENV === 'production', uglify()))
         .pipe(gulp.dest('./dist/js/'));
 }
 
 gulp.task('browserify:compile', function () {
-    return bundleJs(browserify(browserifyOptions)
-    .transform("vueify")
-    .transform("babelify", {presets: ["es2015"]})
-    .transform(["require-globify"])
-    .bundle());
+    return bundleJs(getBrowserifyCommonObj().bundle());
 });
 
 gulp.task('browserify:watch', function () {
-    const watchObject = browserify(browserifyOptions)
-    .transform("vueify")
-    .transform("babelify", {presets: ["es2015"]})
-    .transform(["require-globify"])
-    .plugin(watchify);
+    const watchObject = getBrowserifyCommonObj().plugin(watchify);
 
     function update() {
         return bundleJs(watchObject.bundle());
@@ -105,7 +115,11 @@ gulp.task('browserify:watch', function () {
 });
 
 gulp.task("build:dev", function (callback) {
-    runSequence("clean", "copy", "browserify:compile", callback);
+    runSequence("set-dev-node-env", "clean", "copy", "browserify:compile", callback);
+});
+
+gulp.task("build:prod", function (callback) {
+    runSequence("set-prod-node-env", "clean", "copy", "browserify:compile", callback);
 });
 
 gulp.task('dev', function (callback) {
